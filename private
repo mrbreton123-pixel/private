@@ -95,4 +95,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-print("✅ Triggerbot Loaded Successfully!")
+print("Loaded Successfully!")
