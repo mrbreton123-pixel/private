@@ -1,0 +1,72 @@
+-- Settings
+local HoldClick = false
+local Hotkey = 'r' -- Now using R key
+local HotkeyToggle = true -- True if you want it to toggle on and off with a click
+local Players = game:GetService('Players')
+local RunService = game:GetService('RunService')
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Toggle = false  -- Starts OFF
+local CurrentlyPressed = false
+
+-- Tiny indicator GUI
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "ToggleIndicator"
+Gui.ResetOnSpawn = false
+Gui.Parent = PlayerGui
+
+local Indicator = Instance.new("Frame")
+Indicator.Size = UDim2.new(0, 2, 0, 3) -- 2x3 pixel rectangle
+Indicator.Position = UDim2.new(0, 5, 1, -15) -- bottom-left corner
+Indicator.BorderSizePixel = 0
+Indicator.Parent = Gui
+
+local function UpdateIndicator()
+    Indicator.BackgroundColor3 = Toggle
+        and Color3.fromRGB(0, 255, 0) -- green = on
+        or Color3.fromRGB(255, 0, 0) -- red = off
+end
+UpdateIndicator()
+
+Mouse.KeyDown:Connect(function(key)
+    if HotkeyToggle == true and key == Hotkey then
+        Toggle = not Toggle
+        UpdateIndicator()
+    elseif key == Hotkey then
+        Toggle = true
+        UpdateIndicator()
+    end
+end)
+
+Mouse.KeyUp:Connect(function(key)
+    if HotkeyToggle ~= true and key == Hotkey then
+        Toggle = false
+        UpdateIndicator()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if Toggle then
+        if Mouse.Target and Mouse.Target.Parent then
+            if Mouse.Target.Parent:FindFirstChild('Humanoid') then
+                if HoldClick then
+                    if not CurrentlyPressed then
+                        CurrentlyPressed = true
+                        mouse1press()
+                    end
+                else
+                    mouse1click()
+                end
+            else
+                if HoldClick and CurrentlyPressed then
+                    CurrentlyPressed = false
+                    mouse1release()
+                end
+            end
+        elseif HoldClick and CurrentlyPressed then
+            CurrentlyPressed = false
+            mouse1release()
+        end
+    end
+end)
