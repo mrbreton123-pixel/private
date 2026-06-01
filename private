@@ -1,13 +1,22 @@
 -- Settings
 local HoldClick = false
-local Hotkey = 'r' -- Now using R key
-local HotkeyToggle = true -- True if you want it to toggle on and off with a click
+local Hotkey = 'r' -- Toggle key
+local HotkeyToggle = true 
 local Players = game:GetService('Players')
 local RunService = game:GetService('RunService')
+
+-- Wait for LocalPlayer to load (Important for Auto-Execute)
 local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    LocalPlayer = Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+end
+
 local Mouse = LocalPlayer:GetMouse()
 local Toggle = false  -- Starts OFF
 local CurrentlyPressed = false
+
+-- Team & Health Check
+local TeamCheck = false
 
 -- Tiny indicator GUI
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -17,15 +26,15 @@ Gui.ResetOnSpawn = false
 Gui.Parent = PlayerGui
 
 local Indicator = Instance.new("Frame")
-Indicator.Size = UDim2.new(0, 2, 0, 3) -- 2x3 pixel rectangle
-Indicator.Position = UDim2.new(0, 5, 1, -15) -- bottom-left corner
+Indicator.Size = UDim2.new(0, 2, 0, 3) -- 2x3 pixel
+Indicator.Position = UDim2.new(0, 5, 1, -15)
 Indicator.BorderSizePixel = 0
 Indicator.Parent = Gui
 
 local function UpdateIndicator()
     Indicator.BackgroundColor3 = Toggle
-        and Color3.fromRGB(0, 255, 0) -- green = on
-        or Color3.fromRGB(255, 0, 0) -- red = off
+        and Color3.fromRGB(0, 255, 0)
+        or Color3.fromRGB(255, 0, 0)
 end
 UpdateIndicator()
 
@@ -49,7 +58,22 @@ end)
 RunService.RenderStepped:Connect(function()
     if Toggle then
         if Mouse.Target and Mouse.Target.Parent then
-            if Mouse.Target.Parent:FindFirstChild('Humanoid') then
+            local targetChar = Mouse.Target.Parent
+            local humanoid = targetChar:FindFirstChild('Humanoid')
+            
+            if humanoid and humanoid.Health > 0 then
+                
+                if TeamCheck then
+                    local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
+                    if targetPlayer and targetPlayer.Team == LocalPlayer.Team then
+                        if HoldClick and CurrentlyPressed then
+                            CurrentlyPressed = false
+                            mouse1release()
+                        end
+                        return
+                    end
+                end
+                
                 if HoldClick then
                     if not CurrentlyPressed then
                         CurrentlyPressed = true
@@ -70,3 +94,5 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+print("✅ Triggerbot Loaded Successfully!")
