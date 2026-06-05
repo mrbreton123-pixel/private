@@ -95,3 +95,5 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+print("✅ Triggerbot Loaded! Press R to toggle")
