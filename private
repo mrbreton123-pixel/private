@@ -1,40 +1,27 @@
 -- Settings
 local HoldClick = false
-local Hotkey = 'r' -- Toggle key
+local Hotkey = 'r' -- Press R to toggle
 local HotkeyToggle = true 
 local Players = game:GetService('Players')
 local RunService = game:GetService('RunService')
-
--- Robust LocalPlayer & Mouse Waiting (for Auto-Execute)
 local LocalPlayer = Players.LocalPlayer
-while not LocalPlayer do
-    task.wait(0.1)
-    LocalPlayer = Players.LocalPlayer
-end
-
-local Mouse = nil
-while not Mouse do
-    task.wait(0.1)
-    pcall(function()
-        Mouse = LocalPlayer:GetMouse()
-    end)
-end
-
+local Mouse = LocalPlayer:GetMouse()
 local Toggle = false  -- Starts OFF
 local CurrentlyPressed = false
 
--- Team & Health Check
+-- Team Check & Delay
 local TeamCheck = false
+local Delay = 0.15   -- Delay between shots in seconds (0.15 = 150 milliseconds)
 
 -- Tiny indicator GUI
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Gui = Instance.new("ScreenGui")
 Gui.Name = "ToggleIndicator"
 Gui.ResetOnSpawn = false
 Gui.Parent = PlayerGui
 
 local Indicator = Instance.new("Frame")
-Indicator.Size = UDim2.new(0, 2, 0, 3) -- 2x3 pixel
+Indicator.Size = UDim2.new(0, 2, 0, 3)
 Indicator.Position = UDim2.new(0, 5, 1, -15)
 Indicator.BorderSizePixel = 0
 Indicator.Parent = Gui
@@ -73,12 +60,15 @@ RunService.RenderStepped:Connect(function()
                 
                 if TeamCheck then
                     local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
-                    if targetPlayer and targetPlayer.Team == LocalPlayer.Team then
-                        if HoldClick and CurrentlyPressed then
-                            CurrentlyPressed = false
-                            mouse1release()
+                    if targetPlayer then
+                        if (LocalPlayer.Team and targetPlayer.Team and LocalPlayer.Team == targetPlayer.Team) or
+                           (LocalPlayer.TeamColor and targetPlayer.TeamColor and LocalPlayer.TeamColor == targetPlayer.TeamColor) then
+                            if HoldClick and CurrentlyPressed then
+                                CurrentlyPressed = false
+                                mouse1release()
+                            end
+                            return
                         end
-                        return
                     end
                 end
                 
@@ -89,6 +79,9 @@ RunService.RenderStepped:Connect(function()
                     end
                 else
                     mouse1click()
+                    if Delay > 0 then
+                        task.wait(Delay)
+                    end
                 end
             else
                 if HoldClick and CurrentlyPressed then
@@ -102,5 +95,3 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
-print("Loaded Successfully!")
