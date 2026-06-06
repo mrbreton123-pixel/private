@@ -4,17 +4,31 @@ local Hotkey = 'r' -- Press R to toggle
 local HotkeyToggle = true 
 local Players = game:GetService('Players')
 local RunService = game:GetService('RunService')
+
+-- Robust waiting for LocalPlayer + Mouse (for Auto-Execute)
 local LocalPlayer = Players.LocalPlayer
+while not LocalPlayer do
+    task.wait(0.05)
+    LocalPlayer = Players.LocalPlayer
+end
+
 local Mouse = LocalPlayer:GetMouse()
+while not Mouse do
+    task.wait(0.05)
+    pcall(function()
+        Mouse = LocalPlayer:GetMouse()
+    end)
+end
+
 local Toggle = false  -- Starts OFF
 local CurrentlyPressed = false
 
 -- Team Check & Delay
-local TeamCheck = false
-local Delay = 0.15   -- Delay between shots in seconds (0.15 = 150 milliseconds)
+local TeamCheck = true
+local Delay = 0.15
 
 -- Tiny indicator GUI
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 5)
 local Gui = Instance.new("ScreenGui")
 Gui.Name = "ToggleIndicator"
 Gui.ResetOnSpawn = false
@@ -96,4 +110,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-print("✅ Triggerbot Loaded! Press R to toggle")
+print("✅")
