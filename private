@@ -1,38 +1,27 @@
 -- Settings
-local HoldClick = false
-local Hotkey = 'r' -- Press R to toggle
+local HoldClick = true        -- Changed to true (more reliable)
+local Hotkey = 'r'
 local HotkeyToggle = true 
 local Players = game:GetService('Players')
 local RunService = game:GetService('RunService')
 
--- Robust waiting for LocalPlayer + Mouse (for Auto-Execute)
+-- Robust Load for Auto-Execute
 local LocalPlayer = Players.LocalPlayer
-while not LocalPlayer do
-    task.wait(0.05)
-    LocalPlayer = Players.LocalPlayer
-end
+while not LocalPlayer do task.wait(0.1) LocalPlayer = Players.LocalPlayer end
 
 local Mouse = LocalPlayer:GetMouse()
-while not Mouse do
-    task.wait(0.05)
-    pcall(function()
-        Mouse = LocalPlayer:GetMouse()
-    end)
-end
+while not Mouse do task.wait(0.1) pcall(function() Mouse = LocalPlayer:GetMouse() end) end
 
-local Toggle = false  -- Starts OFF
+local Toggle = false
 local CurrentlyPressed = false
 
--- Team Check & Delay
-local TeamCheck = true
-local Delay = 0.15
+local TeamCheck = false      -- Set to false so it shoots everyone for now
+local Delay = 0.08
 
--- Tiny indicator GUI
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 5)
+-- Tiny 2x3 Indicator
 local Gui = Instance.new("ScreenGui")
-Gui.Name = "ToggleIndicator"
 Gui.ResetOnSpawn = false
-Gui.Parent = PlayerGui
+Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local Indicator = Instance.new("Frame")
 Indicator.Size = UDim2.new(0, 2, 0, 3)
@@ -41,73 +30,58 @@ Indicator.BorderSizePixel = 0
 Indicator.Parent = Gui
 
 local function UpdateIndicator()
-    Indicator.BackgroundColor3 = Toggle
-        and Color3.fromRGB(0, 255, 0)
-        or Color3.fromRGB(255, 0, 0)
+    Indicator.BackgroundColor3 = Toggle and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
 end
 UpdateIndicator()
 
 Mouse.KeyDown:Connect(function(key)
-    if HotkeyToggle == true and key == Hotkey then
+    if key == Hotkey then
         Toggle = not Toggle
-        UpdateIndicator()
-    elseif key == Hotkey then
-        Toggle = true
-        UpdateIndicator()
-    end
-end)
-
-Mouse.KeyUp:Connect(function(key)
-    if HotkeyToggle ~= true and key == Hotkey then
-        Toggle = false
         UpdateIndicator()
     end
 end)
 
 RunService.RenderStepped:Connect(function()
-    if Toggle then
-        if Mouse.Target and Mouse.Target.Parent then
-            local targetChar = Mouse.Target.Parent
-            local humanoid = targetChar:FindFirstChild('Humanoid')
-            
-            if humanoid and humanoid.Health > 0 then
-                
-                if TeamCheck then
-                    local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
-                    if targetPlayer then
-                        if (LocalPlayer.Team and targetPlayer.Team and LocalPlayer.Team == targetPlayer.Team) or
-                           (LocalPlayer.TeamColor and targetPlayer.TeamColor and LocalPlayer.TeamColor == targetPlayer.TeamColor) then
-                            if HoldClick and CurrentlyPressed then
-                                CurrentlyPressed = false
-                                mouse1release()
-                            end
-                            return
-                        end
-                    end
-                end
-                
-                if HoldClick then
-                    if not CurrentlyPressed then
-                        CurrentlyPressed = true
-                        mouse1press()
-                    end
-                else
-                    mouse1click()
-                    if Delay > 0 then
-                        task.wait(Delay)
-                    end
-                end
-            else
-                if HoldClick and CurrentlyPressed then
-                    CurrentlyPressed = false
-                    mouse1release()
-                end
-            end
-        elseif HoldClick and CurrentlyPressed then
+    if not Toggle then 
+        if HoldClick and CurrentlyPressed then
             CurrentlyPressed = false
             mouse1release()
         end
+        return 
+    end
+
+    if Mouse.Target and Mouse.Target.Parent then
+        local targetChar = Mouse.Target.Parent
+        local hum = targetChar:FindFirstChild("Humanoid")
+        
+        if hum and hum.Health > 0 then
+            
+            if TeamCheck then
+                local tp = Players:GetPlayerFromCharacter(targetChar)
+                if tp and ((LocalPlayer.Team and tp.Team == LocalPlayer.Team) or (LocalPlayer.TeamColor == tp.TeamColor)) then
+                    return
+                end
+            end
+
+            if HoldClick then
+                if not CurrentlyPressed then
+                    CurrentlyPressed = true
+                    mouse1press()
+                end
+            else
+                mouse1click()
+                if Delay > 0 then task.wait(Delay) end
+            end
+        else
+            if HoldClick and CurrentlyPressed then
+                CurrentlyPressed = false
+                mouse1release()
+            end
+        end
+    elseif HoldClick and CurrentlyPressed then
+        CurrentlyPressed = false
+        mouse1release()
     end
 end)
 
-print("✅")
+print("!")
