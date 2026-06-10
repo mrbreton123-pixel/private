@@ -1,11 +1,17 @@
--- Settings
-local HoldClick = true        -- Changed to true (more reliable)
-local Hotkey = 'r'
-local HotkeyToggle = true 
+-- === CONFIGURABLE ===
+
+local Config = _G.TriggerbotConfig or {
+    HoldClick = true,
+    TeamCheck = false,     -- Change this from outside
+    Delay = 0.12,
+    Hotkey = 'r',
+    IndicatorTransparency = 0.6,
+}
+
 local Players = game:GetService('Players')
 local RunService = game:GetService('RunService')
 
--- Robust Load for Auto-Execute
+-- Robust Load
 local LocalPlayer = Players.LocalPlayer
 while not LocalPlayer do task.wait(0.1) LocalPlayer = Players.LocalPlayer end
 
@@ -15,10 +21,7 @@ while not Mouse do task.wait(0.1) pcall(function() Mouse = LocalPlayer:GetMouse(
 local Toggle = false
 local CurrentlyPressed = false
 
-local TeamCheck = false      -- Set to false so it shoots everyone for now
-local Delay = 0.08
-
--- Tiny 2x3 Indicator
+-- Tiny Indicator
 local Gui = Instance.new("ScreenGui")
 Gui.ResetOnSpawn = false
 Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -27,6 +30,7 @@ local Indicator = Instance.new("Frame")
 Indicator.Size = UDim2.new(0, 2, 0, 3)
 Indicator.Position = UDim2.new(0, 5, 1, -15)
 Indicator.BorderSizePixel = 0
+Indicator.BackgroundTransparency = Config.IndicatorTransparency
 Indicator.Parent = Gui
 
 local function UpdateIndicator()
@@ -35,7 +39,7 @@ end
 UpdateIndicator()
 
 Mouse.KeyDown:Connect(function(key)
-    if key == Hotkey then
+    if key == Config.Hotkey then
         Toggle = not Toggle
         UpdateIndicator()
     end
@@ -43,7 +47,7 @@ end)
 
 RunService.RenderStepped:Connect(function()
     if not Toggle then 
-        if HoldClick and CurrentlyPressed then
+        if Config.HoldClick and CurrentlyPressed then
             CurrentlyPressed = false
             mouse1release()
         end
@@ -56,32 +60,32 @@ RunService.RenderStepped:Connect(function()
         
         if hum and hum.Health > 0 then
             
-            if TeamCheck then
+            if Config.TeamCheck then
                 local tp = Players:GetPlayerFromCharacter(targetChar)
                 if tp and ((LocalPlayer.Team and tp.Team == LocalPlayer.Team) or (LocalPlayer.TeamColor == tp.TeamColor)) then
                     return
                 end
             end
 
-            if HoldClick then
+            if Config.HoldClick then
                 if not CurrentlyPressed then
                     CurrentlyPressed = true
                     mouse1press()
                 end
             else
                 mouse1click()
-                if Delay > 0 then task.wait(Delay) end
+                if Config.Delay > 0 then task.wait(Config.Delay) end
             end
         else
-            if HoldClick and CurrentlyPressed then
+            if Config.HoldClick and CurrentlyPressed then
                 CurrentlyPressed = false
                 mouse1release()
             end
         end
-    elseif HoldClick and CurrentlyPressed then
+    elseif Config.HoldClick and CurrentlyPressed then
         CurrentlyPressed = false
         mouse1release()
     end
 end)
 
-print("!")
+print("!!")
